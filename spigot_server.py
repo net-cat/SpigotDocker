@@ -56,7 +56,7 @@ class MinecraftProcess:
             save_on = re.compile(r'^Automatic saving is now enabled'),
             nothing_changed_op = re.compile(r'^Nothing changed. The player already is an operator'),
             nothing_changed_deop = re.compile(r'^Nothing changed. The player is not an operator'),
-
+            player_not_found = re.compile(r'^That player does not exist'),
         )
     }
 
@@ -98,16 +98,26 @@ class MinecraftProcess:
                         result = (message_type,) + matches.groups()
                         self._queues[regex_type].put(result)
 
+            # This is temporary until I get some kind of plugin registration going.
+            while not self._queues['player_action'].empty():
+                self._queues['player_action'].get()
+
+    def _clear_queues(self):
+        with self._command_lock:
+            for q in self._queues.values():
+                while not q.empty():
+                    q.get()
+
     def start(self):
         with self._command_lock:
             if self._process is not None:
-                return 'ALREADY_STARTED'
+                return False, 'ALREADY_STARTED'
             self._process = subprocess.Popen([self._java_exe, "-jar", self._jar_file], cwd=self._world_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE)#, stderr=subprocess.PIPE)
             self._running = True
             self._stdout_thread = threading.Thread(target=self._reader_stdout)
             self._stdout_thread.start()
             results = self._wait_for_result('startup_done')
-            return float(results[1])
+            return True, float(results[1])
 
     def query(self):
         return self._process is not None and self._process.poll() is None
@@ -142,40 +152,42 @@ class MinecraftProcess:
                 with tarfile.open(filename, 'w:xz') as backup:
                     for dimension in ('world', 'world_nether', 'world_the_end'):
                         backup.add(os.path.join(self._world_path, dimension), dimension)
-                return True
+                return True, filename
+            except Exception as ex:
+                return False, repr(ex)
             finally:
                 self.send_command('save-on', 'save_on')
-            return False
 
     def say(self, what):
         self.send_command('say ' + what)
+        return True, None
 
     def ban(self, player, reason=None):
         cmd = 'ban ' + player
         if reason is not None:
             cmd += ' ' + reason
-        result = self.send_command(cmd, 'player_banned')
-        return player == result[1]
+        result = self.send_command(cmd, ('player_banned', 'player_not_found'))
+        return result[0] == 'player_banned' and player == result[1], player
 
     def unban(self, player):
-        result = self.send_command('pardon ' + player, 'player_unbanned')
-        return player == result[1]
+        result = self.send_command('pardon ' + player, ('player_unbanned', 'player_not_found'))
+        return result[0] == 'player_unbanned' and player == result[1], player
 
     def whitelist(self, player):
-        result = self.send_command('whitelist add ' + player, 'player_whitelisted')
-        return player == result[1]
+        result = self.send_command('whitelist add ' + player, ('player_whitelisted', 'player_not_found'))
+        return result[0] == 'player_whitelisted' and player == result[1], player
 
     def unwhitelist(self, player):
-        result = self.send_command('whitelist remove ' + player, 'player_unwhitelisted')
-        return player == result[1]
+        result = self.send_command('whitelist remove ' + player, ('player_unwhitelisted', 'player_not_found'))
+        return result[0] == 'player_unwhitelisted' and player == result[1], player
 
     def op(self, player):
-        result = self.send_command('op ' + player, ('player_opped', 'nothing_changed_op'))
-        return result[0] == 'player_opped' and player == result[1]
+        result = self.send_command('op ' + player, ('player_opped', 'nothing_changed_op', 'player_not_found'))
+        return result[0] == 'player_opped' and player == result[1], player
 
     def deop(self, player):
-        result = self.send_command('deop ' + player, ('player_deopped', 'nothing_changed_deop'))
-        return result[0] == 'player_deopped' and player == result[1]
+        result = self.send_command('deop ' + player, ('player_deopped', 'nothing_changed_deop', 'player_not_found'))
+        return result[0] == 'player_deopped' and player == result[1], player
 
     def wait(self):
         self._process.wait()
@@ -185,7 +197,7 @@ class MinecraftProcess:
 
     def stop(self):
         if self._process is None:
-            return 'ALREADY_STOPPED'
+            return False, 'ALREADY_STOPPED'
         with self._command_lock:
             self._stop_commanded = True
             self.send_command("stop")
@@ -193,7 +205,7 @@ class MinecraftProcess:
             self._process = None
             self._threads = {'stderr': None, 'stdout': None}
             self._stop_commanded = False
-            return True
+            return True, None
 
     def pid(self):
         if self._process is not None:
@@ -218,10 +230,10 @@ class CommandHandler(socketserver.BaseRequestHandler):
                     raise RuntimeError('{} is not an allowed method'.format(method))
                 
                 method = getattr(self.server._mc_process, method)
-                reply = [True, method(*args)]
+                reply = [True] + list(method(*args))
                 
         except Exception as ex:
-            reply = [False, repr(ex)]
+            reply = [False, None, repr(ex)]
         
         self.request.sendall(json.dumps(reply).encode('utf-8'))
 
@@ -280,6 +292,8 @@ if __name__ == "__main__":
             print("In order to start a minecraft server, you must specify -w and -j.", file=sys.stderr)
             print("Allowed commands:", ' '.join(CommandHandler.allowed_methods), file=sys.stderr)
             sys.exit(1)
+
+        # For now, just keep the queues clear.
 
         launch_socket_server(args.socket, args.world, args.spigot_jar)
 
