@@ -56,6 +56,10 @@ class MinecraftProcess:
             save_on = re.compile(r'^Automatic saving is now enabled'),
             nothing_changed_op = re.compile(r'^Nothing changed. The player already is an operator'),
             nothing_changed_deop = re.compile(r'^Nothing changed. The player is not an operator'),
+            nothing_changed_ban = re.compile(r'^Nothing changed. The player is already banned'),
+            nothing_changed_unban = re.compile(r"^Nothing changed. The player isn't banned"),
+            already_whitelisted = re.compile(r'^Player is already whitelisted'),
+            already_not_whitelisted = re.compile(r'^Player is not whitelisted'),
             player_not_found = re.compile(r'^That player does not exist'),
         )
     }
@@ -166,19 +170,19 @@ class MinecraftProcess:
         cmd = 'ban ' + player
         if reason is not None:
             cmd += ' ' + reason
-        result = self.send_command(cmd, ('player_banned', 'player_not_found'))
+        result = self.send_command(cmd, ('player_banned', 'nothing_changed_ban', 'player_not_found'))
         return result[0] == 'player_banned' and player == result[1], player
 
     def unban(self, player):
-        result = self.send_command('pardon ' + player, ('player_unbanned', 'player_not_found'))
+        result = self.send_command('pardon ' + player, ('player_unbanned', 'nothing_changed_unban', 'player_not_found'))
         return result[0] == 'player_unbanned' and player == result[1], player
 
     def whitelist(self, player):
-        result = self.send_command('whitelist add ' + player, ('player_whitelisted', 'player_not_found'))
+        result = self.send_command('whitelist add ' + player, ('player_whitelisted', 'already_whitelisted', 'player_not_found'))
         return result[0] == 'player_whitelisted' and player == result[1], player
 
     def unwhitelist(self, player):
-        result = self.send_command('whitelist remove ' + player, ('player_unwhitelisted', 'player_not_found'))
+        result = self.send_command('whitelist remove ' + player, ('player_unwhitelisted', 'already_not_whitelisted', 'player_not_found'))
         return result[0] == 'player_unwhitelisted' and player == result[1], player
 
     def op(self, player):
