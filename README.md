@@ -44,12 +44,11 @@ The commands available are:
 * `query` - Query if server is running.
 * `do_backup` - Place a .tar.xz of the world in the backups directory.
 * `say <text>` - Say something to the players on the server.
-* `pid` - Get the pid of the server process
 
 ## TODO
 * Move "eula=true" from build to run.
+* Scheduled backups. (Because asyncio is wonderful.)
 * Instructions
-* Backup needs to back up a few more things than it does.
 
 ## License
 Yes, picking AGPL was intentional. I don't intend for this to be used commercially and that seemed like the best way to prevent that from ever happening.

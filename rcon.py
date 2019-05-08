@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import asyncio
 import struct
 import random
@@ -140,7 +141,7 @@ class MinecraftRCON(RCON):
             return False
         if recv_msg.request_id == send_msg.request_id:
             return True
-        raise MinecraftRCONError("Minecraft auth neither failed nor succeeded: {!s}".format(recv_msg))
+        raise self.__class__.MinecraftRCONError("Minecraft auth neither failed nor succeeded: {!s}".format(recv_msg))
         
     async def send_command(self, *cmd):
         cmd = [x.encode('utf-8') if isinstance(x, str) else x for x in cmd]

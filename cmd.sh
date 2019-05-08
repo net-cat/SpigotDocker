@@ -1,2 +1,2 @@
 #!/bin/sh
-/opt/spigot/spigot_server.py -s /tmp/spigot_server.socket $*
+/opt/spigot/minecraft_manage.py -s /tmp/minecraft_manage.socket $*
