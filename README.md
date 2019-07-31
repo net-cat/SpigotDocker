@@ -15,17 +15,51 @@ This system has no aspirations of being anything other than what it is.
 
 ***NOTE: This is still in early, early alpha.***
 
-Build the containers:
+### BuildTools Instructions
 
-	docker build -t <tag name> -f Dockerfile . --build-arg spigot_ver=1.14 --build-arg minecraft_eula=true
+Build the BuildTools container:
+
+	docker build -f Dockerfile-buildjar -t spigot_builder .
+
+Create an output directory for the BuildTools container:
+
+	mkdir buildtools-output
+
+Run the BuildTools container:
+
+	docker run -d -v `pwd`/buildtools_output:/home/buildtools --name buildtools_runner spigot_builder
+
+At this point, you can invoke BuildTools as much as you need. All the output will end up in the output directory.
+
+	docker exec -it buildtools_runner buildtools # With the default version.
+	docker exec -it buildtools_runner buildtools --rev 1.14.4 # With a specific version
+
+Once you have built all the versions of spigot you need, you can stop or kill the container.
+
+	docker kill buildtools_runner
+
+You can then delete or start the container as needed.
+
+	docker container rm buildtools_runner
+	docker start buildtools_runner
+
+If you need to update BuildTools, just delete the container and image and repeat the steps.
+
+	docker image rm spigot_builder
+
+### Running Spigot
+
+Build the image, providing the JAR file from the previous step. (Or literally any Spigot JAR file.)
+
+	docker build -t spigot_runner -f Dockerfile . --build-arg spigot_bin=buildtools_output/spigot-<version>.jar
 
 Run the instance:
 
-	docker run -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> <tag name>
+	docker run -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> spigot_runner
 
 You can add a `_JAVA_OPTIONS` environtment variable, if you want.
 
-	docker run -e _JAVA_OPTIONS="-Xmx24G" -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> <tag name>
+	docker run -e _JAVA_OPTIONS="-Xmx24G" -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> spigot_runner
 
 You can manage the server with docker exec.
 
@@ -45,10 +79,11 @@ The commands available are:
 * `do_backup` - Place a .tar.xz of the world in the backups directory.
 * `say <text>` - Say something to the players on the server.
 
+You can also agree to the Minecraft EULA by running `accep-eula` script with `exec`. This only needs to be done once per world. Once this is done, you can use `cmd start` command to start the server and the server will come up automatically on container start.
+
 ## TODO
-* Move "eula=true" from build to run.
 * Scheduled backups. (Because asyncio is wonderful.)
-* Instructions
+* Figure out whay `cmd stop` hangs.
 
 ## License
 Yes, picking AGPL was intentional. I don't intend for this to be used commercially and that seemed like the best way to prevent that from ever happening.

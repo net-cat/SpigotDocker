@@ -84,11 +84,16 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--socket', type=os.path.realpath, required=True, help="Location of socket file.")
     parser.add_argument('-w', '--world', type=os.path.realpath, default=None, help="Location of minecraft world.")
     parser.add_argument('-j', '--minecraft-jar', type=os.path.realpath, default=None, help="Location of minecraft JAR file.")
+    parser.add_argument('--accept-eula', action='store_true', help="Agree to the Minecraft EULA for the active world.")
     parser.add_argument('command', nargs='?', default=None, help="Command to send to running server.")
     parser.add_argument('args', nargs='*', default=None, help="Command arguments.")
     args = parser.parse_args()
 
-    if args.command is None:
+    if args.accept_eula:
+        with open(os.path.join(args.world, 'eula.txt'), 'w', encoding='utf-8') as f:
+            f.write("eula=true\n")
+
+    elif args.command is None:
         if args.world is None or args.minecraft_jar is None:
             print("In order to start a minecraft server, you must specify -w and -j.", file=sys.stderr)
             print("Allowed commands:", ' '.join(MinecraftSocketServer.allowed_methods), file=sys.stderr)

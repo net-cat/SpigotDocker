@@ -47,7 +47,7 @@ class MinecraftProcess:
             config['rcon.port'] = '25575'
             changed = True
         if not config.get('rcon.password', ''):
-            config['rcon.password'] = base64.b64encode(os.urandom(48)).decode('ascii')
+            config['rcon.password'] = base64.b64encode(os.urandom(48), b'./').decode('ascii')
             changed = True
         if changed:
             config.save()
