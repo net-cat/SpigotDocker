@@ -17,6 +17,8 @@ This system has no aspirations of being anything other than what it is.
 
 ### BuildTools Instructions
 
+*NOTE: If you just want to run vanilla Minecraft, skip to the next section.*
+
 Build the BuildTools container:
 
 	docker build -f Dockerfile-buildjar -t spigot_builder .
@@ -65,6 +67,11 @@ Run the instance:
 You can add a `_JAVA_OPTIONS` environtment variable, if you want.
 
 	docker run -e _JAVA_OPTIONS="-Xmx24G" -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> spigot_runner
+
+When you first create a new world, you have to accept [Mojang's EULA](https://www.minecraft.net/en-us/eula/) and then start the server manually.
+
+	docker exec -it <container name> accept-eula
+	docker exec -it <container name> cmd start
 
 You can manage the server with docker exec.
 
