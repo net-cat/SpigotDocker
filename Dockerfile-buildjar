@@ -1,0 +1,21 @@
+ARG java_ver=12
+
+FROM openjdk:$java_ver-jdk-alpine
+LABEL version="0.1"
+
+RUN mkdir -p /opt/buildtools
+WORKDIR /opt/buildtools
+ADD https://hub.spigotmc.org/jenkins/job/BuildTools/lastBuild/artifact/target/BuildTools.jar .
+COPY --chown=root:root buildtools.sh buildtools
+COPY --chown=root:root wait_doing_nothing.sh wait_doing_nothing
+RUN chmod 644 BuildTools.jar
+RUN chmod 755 buildtools
+RUN chmod 755 wait_doing_nothing
+RUN apk add git
+ENV PATH=/opt/buildtools:$PATH
+VOLUME /home/buildtools
+RUN adduser buildtools -D
+USER buildtools
+WORKDIR /home/buildtools
+CMD wait_doing_nothing
+

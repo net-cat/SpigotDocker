@@ -47,15 +47,20 @@ If you need to update BuildTools, just delete the container and image and repeat
 
 	docker image rm spigot_builder
 
-### Running Spigot
+### Running Spigot or Vanilla Minecraft
+
+Please Note:
+
+* The ``X_Y_Z`` and ``X.Y.Z`` notations refers to the version of Minecraft you are installing. The ``Z`` component can be omitted for new releases.
+* Vanilla Minecraft works fine. You can skip the BuildTools step and use Mojang-provided ``server.jar`` in place of ``spigot-X.Y.Z.jar``
 
 Build the image, providing the JAR file from the previous step. (Or literally any Spigot JAR file.)
 
-	docker build -t spigot_runner -f Dockerfile . --build-arg spigot_bin=buildtools_output/spigot-<version>.jar
+	docker build -t spigot_runner_X_Y_Z -f Dockerfile . --build-arg spigot_bin=buildtools_output/spigot-X.Y.Z.jar
 
 Run the instance:
 
-	docker run -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> spigot_runner
+	docker run -d -v <volume name>:/spigotmc -p 25565:25565 --name <container name> spigot_runner_X_Y_Z
 
 You can add a `_JAVA_OPTIONS` environtment variable, if you want.
 
@@ -79,7 +84,7 @@ The commands available are:
 * `do_backup` - Place a .tar.xz of the world in the backups directory.
 * `say <text>` - Say something to the players on the server.
 
-You can also agree to the Minecraft EULA by running `accep-eula` script with `exec`. This only needs to be done once per world. Once this is done, you can use `cmd start` command to start the server and the server will come up automatically on container start.
+You can also agree to the Minecraft EULA by running `accept-eula` script with `exec`. This only needs to be done once per world. Once this is done, you can use `cmd start` command to start the server and the server will come up automatically on container start.
 
 ## TODO
 * Scheduled backups. (Because asyncio is wonderful.)
