@@ -110,11 +110,17 @@ class MinecraftProcess:
             await self._comms.send_command('save-off')
             try:
                 await self._comms.send_command('save-all')
+
+                world_folders = ['world']
+                if os.path.exists('world_nether'):
+                    world_folders.append('world_nether')
+                if os.path.exists('world_the_end'):
+                    world_folders.append('world_the_end')
         
                 # Backups can run long, so spin it off in a separate process.
-                backup_filename = os.path.join(self._backup_path, datetime.datetime.now().isoformat() + ".tar.bz2")
+                backup_filename = os.path.join(self._backup_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".tar.bz2")
                 self._backup_process = await asyncio.create_subprocess_exec(
-                    'tar', '-cjf', backup_filename, 'world', 'world_nether', 'world_the_end',
+                    'tar', '-cjf', backup_filename, *world_folders,
                     stdin=asyncio.subprocess.DEVNULL,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE
@@ -180,6 +186,9 @@ class MinecraftProcess:
             if self._process is None:
                 return False, 'The Minecraft process is already stopped.'
             await self._comms.send_command("stop")
+            await self._comms.close() # Some versions of minecraft hang if RCON is connected when stopped.
+            self._comms = None
             await self.wait()
             # self._process will be set to none by self._process_waiter
+            return True, None
 

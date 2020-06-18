@@ -87,15 +87,20 @@ The commands available are:
 * `unban <player>` - Unban player from server.
 * `start` - Start server (if stopped)
 * `stop` - Stop server (if started)
-* `query` - Query if server is running.
+* `query` - Query if server is running. (Returns [true, true, pid] if running, [true, false, null] if not running.)
 * `do_backup` - Place a .tar.xz of the world in the backups directory.
 * `say <text>` - Say something to the players on the server.
 
 You can also agree to the Minecraft EULA by running `accept-eula` script with `exec`. This only needs to be done once per world. Once this is done, you can use `cmd start` command to start the server and the server will come up automatically on container start.
 
+Calls to cmd will write a JSON list with three elements to stdout. The elements are as follows:
+
+0. True if the socket connection was successful. (This will be false if the container isn't running or there are permissions issues.)
+1. True if the command was successful, false if not. (Unless otherwise noted above.)
+2. Detailed error message on failure and relevant information on success.
+
 ## TODO
 * Scheduled backups. (Because asyncio is wonderful.)
-* Figure out whay `cmd stop` hangs.
 
 ## License
 Yes, picking AGPL was intentional. I don't intend for this to be used commercially and that seemed like the best way to prevent that from ever happening.
