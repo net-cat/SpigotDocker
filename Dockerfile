@@ -1,4 +1,4 @@
-ARG java_ver=12
+ARG java_ver=14
 
 FROM openjdk:$java_ver-alpine
 LABEL version="0.1"

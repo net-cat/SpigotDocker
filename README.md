@@ -83,6 +83,7 @@ The commands available are:
 * `deop <player>` - Revoke player operator status.
 * `whitelist <player>` - Add player to server whitelist.
 * `unwhitelist <player>` - Remove player from server whitelist.
+* `whitelistctl <cmd>` - Allows use of on/off/list/reload command from command line.
 * `ban <player>` - Bad player from server.
 * `unban <player>` - Unban player from server.
 * `start` - Start server (if stopped)

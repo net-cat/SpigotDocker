@@ -172,6 +172,21 @@ class MinecraftProcess:
     async def unwhitelist(self, player):
         return await self._command_template('whitelist', 'remove', player, success_re=r'^Removed (\S+) from the whitelist')
 
+    async def whitelistctl(self, ctl):
+        if ctl in ('on', 'off'):
+            success_re = f'^Whitelist is now turned {ctl!s}'
+        elif ctl == 'reload':
+            success_re = '^Reloaded the whitelist'
+        elif ctl == 'list':
+            success_re = '^There are (\d+) whitelisted players:'
+        elif ctl == 'add':
+            return False, f'Use the whitelist command instead.'
+        elif ctl == 'remove':
+            return False, f'Use the unwhitelist command instead.'
+        else:
+            return False, f'{ctl!s} is not a valid whitelist command'
+        return await self._command_template('whitelist', ctl, success_re=success_re)
+
     async def op(self, player):
         return await self._command_template('op', player, success_re=r'^Made (\S+) a server operator')
 

@@ -9,7 +9,7 @@ import sys
 from minecraft_process import MinecraftProcess
 
 class MinecraftSocketServer:
-    allowed_methods = ('start', 'query', 'do_backup', 'say', 'ban', 'unban', 'whitelist', 'unwhitelist', 'op', 'deop', 'stop')
+    allowed_methods = ('start', 'query', 'do_backup', 'say', 'ban', 'unban', 'whitelist', 'unwhitelist', 'whitelistctl', 'op', 'deop', 'stop')
 
     def __init__(self, loop):
         self._mc_process = None
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             to_send.append(' '.join(args.args))
         elif args.command in ('start', 'query', 'do_backup', 'stop') and len(args.args) == 0:
             pass
-        elif args.command in ('unban', 'whitelist', 'unwhitelist', 'op', 'deop') and len(args.args) == 1:
+        elif args.command in ('unban', 'whitelist', 'whitelistctl', 'unwhitelist', 'op', 'deop') and len(args.args) == 1:
             to_send.append(args.args[0])
         elif args.command in ('ban') and len(args.args) > 0:
             to_send += args.args[0:2]
