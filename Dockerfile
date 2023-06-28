@@ -1,6 +1,6 @@
-ARG java_ver=14
+ARG java_ver=17
 
-FROM openjdk:$java_ver-alpine
+FROM eclipse-temurin:$java_ver-alpine
 LABEL version="0.1"
 
 ARG spigot_bin=spigot-*.jar
