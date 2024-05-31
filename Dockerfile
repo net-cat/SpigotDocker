@@ -1,4 +1,4 @@
-ARG java_ver=17
+ARG java_ver=21
 
 FROM eclipse-temurin:$java_ver-alpine
 LABEL version="0.1"
